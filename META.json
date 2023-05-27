@@ -55,6 +55,17 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/kfly8/Hello-Keyword/issues"
+      },
+      "homepage" : "https://github.com/kfly8/Hello-Keyword",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/kfly8/Hello-Keyword.git",
+         "web" : "https://github.com/kfly8/Hello-Keyword"
+      }
+   },
    "version" : "0.01",
    "x_serialization_backend" : "JSON::PP version 4.07",
    "x_static_install" : 0

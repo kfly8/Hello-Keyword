@@ -1,4 +1,4 @@
-
+[![Actions Status](https://github.com/kfly8/Hello-Keyword/actions/workflows/test.yml/badge.svg)](https://github.com/kfly8/Hello-Keyword/actions)
 # NAME
 
 Hello::Keyword - It's new $module
