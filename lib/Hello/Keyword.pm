@@ -5,8 +5,29 @@ use warnings;
 
 our $VERSION = "0.01";
 
+use Carp qw(croak);
+
 use XSLoader;
 XSLoader::load(__PACKAGE__, $VERSION);
+
+sub import {
+   my $class = shift;
+   my $caller = caller;
+
+   $class->import_into( $caller, @_ );
+}
+
+sub import_into {
+   my $class = shift;
+   my $caller = shift;
+
+   my @syms = qw( keyword_hello );
+
+   my %syms = map { $_ => 1 } @syms;
+   delete $syms{$_} and $^H{"Hello::Keyword/$_"}++ for @syms;
+
+   croak "Unrecognised import symbols @{[ keys %syms ]}" if keys %syms;
+}
 
 1;
 __END__
