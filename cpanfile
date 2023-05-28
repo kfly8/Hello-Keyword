@@ -1,4 +1,4 @@
-requires 'perl', '5.008001';
+requires 'perl', '5.0016001';
 
 on configure => sub {
     requires 'Devel::PPPort', '3.68';
