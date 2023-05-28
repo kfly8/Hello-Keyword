@@ -1,10 +1,11 @@
-use v5.36;
+use strict;
+use warnings;
 use Test::More;
 
 use Hello::Keyword;
 
 keyword_hello Hoge {
-    say "Hello, Hoge!";
+    print "Hello, Hoge!\n";
 };
 
 pass;
