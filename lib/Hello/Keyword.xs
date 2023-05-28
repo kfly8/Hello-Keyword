@@ -1,7 +1,3 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define PERL_NO_GET_CONTEXT /* we want efficiency */
 #include <EXTERN.h>
 #include <perl.h>
@@ -9,10 +5,6 @@ extern "C" {
 
 #include "XSParseKeyword.h"
 //#include "XSParseSublike.h"
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
 
 #define NEED_newSVpvn_flags
 #include "ppport.h"
@@ -36,25 +28,17 @@ static int build_keyword_hello(pTHX_ OP **out, XSParseKeywordPiece *args[], size
 {
   int argi = 0;
 
-  SV *typename = args[argi++]->sv;
-  /* Grrr; XPK bug */
-  if(!typename) {
-    croak("Expected a type name after 'type'");
-  }
+  SV *message = args[argi++]->sv;
+  if(!message)
+    croak("Expected a message after 'keyword_hello'");
 
-  sv_dump(typename);
-
-  /* At this point XS::Parse::Keyword has parsed all it can. From here we will
-   * take over to perform the odd "block or statement" behaviour of `class`
-   * keywords
-   */
+  sv_dump(message);
 
   if(lex_consume_unichar('{')) {
     ENTER;
   }
-  else {
+  else
     croak("Expected a block");
-  }
 
   I32 save_ix = block_start(TRUE);
 
@@ -63,9 +47,8 @@ static int build_keyword_hello(pTHX_ OP **out, XSParseKeywordPiece *args[], size
 
   op_dump(body);
 
-  if(!lex_consume_unichar('}')) {
+  if(!lex_consume_unichar('}'))
     croak("Expected }");
-  }
 
   LEAVE;
 
