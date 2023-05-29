@@ -4,7 +4,6 @@
 #include <XSUB.h>
 
 #include "XSParseKeyword.h"
-//#include "XSParseSublike.h"
 
 #define NEED_newSVpvn_flags
 #include "ppport.h"

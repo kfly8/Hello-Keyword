@@ -1,5 +1,5 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "Hello World of keyword_plugin",
    "author" : [
       "kobaken <kentafly88@gmail.com>"
    ],
@@ -30,8 +30,7 @@
             "Devel::PPPort" : "3.68",
             "Module::Build" : "0.4005",
             "Module::Build::XSUtil" : "0.19",
-            "XS::Parse::Keyword::Builder" : "0.33",
-            "XS::Parse::Sublike::Builder" : "0.17"
+            "XS::Parse::Keyword::Builder" : "0.33"
          }
       },
       "develop" : {

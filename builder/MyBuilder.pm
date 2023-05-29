@@ -5,7 +5,6 @@ use base qw(Module::Build::XSUtil);
 
 use Devel::PPPort;
 use XS::Parse::Keyword::Builder;
-use XS::Parse::Sublike::Builder;
 
 sub new {
     my ($class, %args) = @_;
@@ -17,7 +16,6 @@ sub new {
 
     my @flags = @{ $build->extra_compiler_flags };
     push @flags, XS::Parse::Keyword::Builder->extra_compiler_flags;
-    push @flags, XS::Parse::Sublike::Builder->extra_compiler_flags;
 
     $build->extra_compiler_flags( @flags );
 
@@ -28,7 +26,6 @@ sub ACTION_code {
     my ($self, @args) = @_;
 
     XS::Parse::Keyword::Builder->write_XSParseKeyword_h;
-    XS::Parse::Sublike::Builder->write_XSParseSublike_h;
 
     $self->SUPER::ACTION_code(@args);
 }
