@@ -31,32 +31,29 @@ static int build_keyword_hello(pTHX_ OP **out, XSParseKeywordPiece *args[], size
   if(!message)
     croak("Expected a message after 'keyword_hello'");
 
-  //sv_dump(message);
-
-  if(lex_consume_unichar('{')) {
-    ENTER;
-  }
-  else
-    croak("Expected a block");
-
-
-  I32 save_ix = block_start(TRUE);
-
-  OP *body = parse_stmtseq(0);
-  body = block_end(save_ix, body);
-
   SV *hello = newSVpvf("Hello, %s!\n", SvPV_nolen_const(message));
   OP *newstate = newSTATEOP(0, NULL, 0);
   OP *print_hello_op = newLISTOP(OP_PRINT, 0, newstate, newSVOP(OP_CONST, 0, hello));
 
-  body = op_append_elem(OP_LINESEQ, print_hello_op, body);
+  //sv_dump(message);
+  //op_dump(print_hello_op);
 
-  //op_dump(body);
+  if(!lex_consume_unichar('{'))
+    croak("Expected a block");
+
+  ENTER;
+
+  I32 save_ix = block_start(TRUE);
+  OP *body = parse_stmtseq(0);
+  body = block_end(save_ix, body);
 
   if(!lex_consume_unichar('}'))
     croak("Expected }");
 
   LEAVE;
+
+  //op_dump(body);
+  body = op_append_elem(OP_LINESEQ, print_hello_op, body);
 
   *out = op_append_elem(OP_LINESEQ,
     newWHILEOP(0, 1, NULL, NULL, body, NULL, 0),
