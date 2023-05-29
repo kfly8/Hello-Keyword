@@ -32,7 +32,7 @@ static int build_keyword_hello(pTHX_ OP **out, XSParseKeywordPiece *args[], size
   if(!message)
     croak("Expected a message after 'keyword_hello'");
 
-  sv_dump(message);
+  //sv_dump(message);
 
   if(lex_consume_unichar('{')) {
     ENTER;
@@ -40,12 +40,19 @@ static int build_keyword_hello(pTHX_ OP **out, XSParseKeywordPiece *args[], size
   else
     croak("Expected a block");
 
+
   I32 save_ix = block_start(TRUE);
 
   OP *body = parse_stmtseq(0);
   body = block_end(save_ix, body);
 
-  op_dump(body);
+  SV *hello = newSVpvf("Hello, %s!\n", SvPV_nolen_const(message));
+  OP *newstate = newSTATEOP(0, NULL, 0);
+  OP *print_hello_op = newLISTOP(OP_PRINT, 0, newstate, newSVOP(OP_CONST, 0, hello));
+
+  body = op_append_elem(OP_LINESEQ, print_hello_op, body);
+
+  //op_dump(body);
 
   if(!lex_consume_unichar('}'))
     croak("Expected }");
@@ -60,7 +67,7 @@ static int build_keyword_hello(pTHX_ OP **out, XSParseKeywordPiece *args[], size
 
 
 static const struct XSParseKeywordHooks keyword_hello_hooks = {
-  .permit_hintkey = "Hello::Keyword/keyword_hello",
+  .permit_hintkey = "Hello::Keyword/Hello",
   .pieces = pieces_keyword_hello,
   .build = &build_keyword_hello,
 };
@@ -69,14 +76,7 @@ MODULE = Hello::Keyword    PACKAGE = Hello::Keyword
 
 PROTOTYPES: DISABLE
 
-void
-hello()
-CODE:
-{
-    ST(0) = newSVpvs_flags("Hello, world!", SVs_TEMP);
-}
-
 BOOT:
   boot_xs_parse_keyword(0.33);
 
-  register_xs_parse_keyword("keyword_hello", &keyword_hello_hooks, "keyword_hello");
+  register_xs_parse_keyword("Hello", &keyword_hello_hooks, "Hello");
