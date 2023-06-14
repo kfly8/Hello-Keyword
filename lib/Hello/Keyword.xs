@@ -8,52 +8,88 @@
 #define NEED_newSVpvn_flags
 #include "ppport.h"
 
-#define lex_consume_unichar(c)  MY_lex_consume_unichar(aTHX_ c)
-static bool MY_lex_consume_unichar(pTHX_ I32 c)
-{
-  if(lex_peek_unichar(0) != c)
-    return FALSE;
+//#define lex_consume_unichar(c)  MY_lex_consume_unichar(aTHX_ c)
+//static bool MY_lex_consume_unichar(pTHX_ I32 c)
+//{
+//  if(lex_peek_unichar(0) != c)
+//    return FALSE;
+//
+//  lex_read_unichar(0);
+//  return TRUE;
+//}
 
-  lex_read_unichar(0);
-  return TRUE;
+SV* my_parse_block_body(pTHX_) {
+    char* start = NULL;
+    char* end = NULL;
+    I32 c;
+    I32 block_start_depth = 0;
+    I32 block_end_depth = 0;
+
+    while ((c = lex_peek_unichar(0)) != EOF) {
+        if (c == '{') {
+            block_start_depth++;
+            if (block_start_depth == 1) {
+                start = PL_parser->bufptr;
+            }
+        }
+        if (c == '}') {
+            block_end_depth++;
+            if (block_start_depth == block_end_depth) {
+                end = PL_parser->bufptr;
+                break;
+            }
+        }
+        lex_read_unichar(0);
+    }
+
+    if (!start) {
+        croak("not found block start");
+    }
+
+    if (!end) {
+        croak("not found block end");
+    }
+
+    // Increment and decrement to ignore the brackets themselves
+    start++;
+    end--;
+
+    if (end < start) {
+        croak("illegal block");
+    }
+
+    STRLEN len = end - start + 1;
+    SV *block = sv_2mortal(newSV(len));
+    sv_setpvn(block, start, len);
+
+    char* block_pv = SvPV_nolen(block);
+
+    return block;
 }
 
-static const struct XSParseKeywordPieceType pieces_keyword_hello[] = {
+
+static const struct XSParseKeywordPieceType pieces_keyword_type[] = {
   XPK_IDENT,
   {0}
 };
 
-static int build_keyword_hello(pTHX_ OP **out, XSParseKeywordPiece *args[], size_t nargs, void *hookdata)
+static int build_keyword_type(pTHX_ OP **out, XSParseKeywordPiece *args[], size_t nargs, void *hookdata)
 {
   int argi = 0;
 
-  SV *message = args[argi++]->sv;
-  if(!message)
-    croak("Expected a message after 'keyword_hello'");
+  SV *type_name = args[argi++]->sv;
+  if(!type_name)
+    croak("Expected a message after 'keyword_type'");
 
-  SV *hello = newSVpvf("Hello, %s!\n", SvPV_nolen_const(message));
   OP *newstate = newSTATEOP(0, NULL, 0);
-  OP *print_hello_op = newLISTOP(OP_PRINT, 0, newstate, newSVOP(OP_CONST, 0, hello));
+  OP *type_op = newLISTOP(OP_PRINT, 0, newstate, newSVOP(OP_CONST, 0, type_name));
 
-  //sv_dump(message);
-  //op_dump(print_hello_op);
+  SV *mybody = my_parse_block_body(aTHX_);
+  sv_dump(mybody);
 
-  if(!lex_consume_unichar('{'))
-    croak("Expected a block");
+  OP *body = type_op;
 
-  ENTER;
-
-  I32 save_ix = block_start(TRUE);
-  OP *body = parse_stmtseq(0);
-  body = block_end(save_ix, body);
-
-  if(!lex_consume_unichar('}'))
-    croak("Expected }");
-
-  LEAVE;
-
-  //op_dump(body);
-  body = op_append_elem(OP_LINESEQ, print_hello_op, body);
+//  body = op_append_elem(OP_LINESEQ, print_hello_op, body);
 
   *out = op_append_elem(OP_LINESEQ,
     newWHILEOP(0, 1, NULL, NULL, body, NULL, 0),
@@ -62,10 +98,10 @@ static int build_keyword_hello(pTHX_ OP **out, XSParseKeywordPiece *args[], size
 }
 
 
-static const struct XSParseKeywordHooks keyword_hello_hooks = {
-  .permit_hintkey = "Hello::Keyword/Hello",
-  .pieces = pieces_keyword_hello,
-  .build = &build_keyword_hello,
+static const struct XSParseKeywordHooks keyword_type_hooks = {
+  .permit_hintkey = "Hello::Keyword/type",
+  .pieces = pieces_keyword_type,
+  .build = &build_keyword_type,
 };
 
 MODULE = Hello::Keyword    PACKAGE = Hello::Keyword
@@ -75,4 +111,4 @@ PROTOTYPES: DISABLE
 BOOT:
   boot_xs_parse_keyword(0.33);
 
-  register_xs_parse_keyword("Hello", &keyword_hello_hooks, "Hello");
+  register_xs_parse_keyword("type", &keyword_type_hooks, "type");

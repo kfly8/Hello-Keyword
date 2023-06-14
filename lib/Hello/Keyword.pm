@@ -21,7 +21,7 @@ sub import_into {
    my $class = shift;
    my $caller = shift;
 
-   my @syms = qw( Hello );
+   my @syms = qw( type );
 
    my %syms = map { $_ => 1 } @syms;
    delete $syms{$_} and $^H{"Hello::Keyword/$_"}++ for @syms;
