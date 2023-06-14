@@ -8,16 +8,6 @@
 #define NEED_newSVpvn_flags
 #include "ppport.h"
 
-//#define lex_consume_unichar(c)  MY_lex_consume_unichar(aTHX_ c)
-//static bool MY_lex_consume_unichar(pTHX_ I32 c)
-//{
-//  if(lex_peek_unichar(0) != c)
-//    return FALSE;
-//
-//  lex_read_unichar(0);
-//  return TRUE;
-//}
-
 SV* my_parse_block_body(pTHX_) {
     char* start = NULL;
     char* end = NULL;
@@ -32,14 +22,19 @@ SV* my_parse_block_body(pTHX_) {
                 start = PL_parser->bufptr;
             }
         }
+
         if (c == '}') {
             block_end_depth++;
             if (block_start_depth == block_end_depth) {
                 end = PL_parser->bufptr;
-                break;
             }
         }
+
         lex_read_unichar(0);
+
+        if (start && end) {
+            break;
+        }
     }
 
     if (!start) {
@@ -62,8 +57,6 @@ SV* my_parse_block_body(pTHX_) {
     SV *block = sv_2mortal(newSV(len));
     sv_setpvn(block, start, len);
 
-    char* block_pv = SvPV_nolen(block);
-
     return block;
 }
 
@@ -77,23 +70,23 @@ static int build_keyword_type(pTHX_ OP **out, XSParseKeywordPiece *args[], size_
 {
   int argi = 0;
 
-  SV *type_name = args[argi++]->sv;
-  if(!type_name)
-    croak("Expected a message after 'keyword_type'");
+  XSParseKeywordPiece *ident = args[argi++];
 
-  OP *newstate = newSTATEOP(0, NULL, 0);
-  OP *type_op = newLISTOP(OP_PRINT, 0, newstate, newSVOP(OP_CONST, 0, type_name));
+  SV *hello = newSVpvf("Hello, %s at line %d\n", SvPV_nolen_const(ident->sv), ident->line);
+  OP *print_hello_op = newLISTOP(OP_PRINT, 0, newSTATEOP(0, NULL, 0), newSVOP(OP_CONST, 0, hello));
 
-  SV *mybody = my_parse_block_body(aTHX_);
-  sv_dump(mybody);
+  SV *body = my_parse_block_body(aTHX_);
+  SV *mybody = newSVpvf("BODY: %s\n", SvPV_nolen_const(body));
+  OP *print_body_op = newLISTOP(OP_PRINT, 0, newSTATEOP(0, NULL, 0), newSVOP(OP_CONST, 0, mybody));
 
-  OP *body = type_op;
-
-//  body = op_append_elem(OP_LINESEQ, print_hello_op, body);
+  OP *myop = op_append_elem(OP_LINESEQ, print_hello_op, print_body_op);
 
   *out = op_append_elem(OP_LINESEQ,
-    newWHILEOP(0, 1, NULL, NULL, body, NULL, 0),
+    newWHILEOP(0, 1, NULL, NULL, myop, NULL, 0),
     newSVOP(OP_CONST, 0, &PL_sv_yes));
+
+//  op_dump(*out);
+
   return KEYWORD_PLUGIN_STMT;
 }
 

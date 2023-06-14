@@ -5,7 +5,9 @@ use Test::More;
 
 use Hello::Keyword;
 
-type Hoge { Int | Str };
+type Hoge { print "eInt | Str" };
+
+warn '=======================';
 
 pass;
 
